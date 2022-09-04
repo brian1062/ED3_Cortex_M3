@@ -1,0 +1,48 @@
+/*
+===============================================================================
+ Name        : Interrupciones_por_GPIO_2.c
+ Author      : $(author)
+ Version     :
+ Copyright   : $(copyright)
+ Description : Realizar un programa que configure el puerto P0.0 y P2.0
+ para que provoquen una interrupción por flanco de subida.
+ Si la interrupción es por P0.0 guardar el valor binario 100111 en la variable
+ "auxiliar",
+  si es por P2.0 guardar el valor binario 111001011010110.
+===============================================================================
+*/
+
+#ifdef __USE_CMSIS
+#include "LPC17xx.h"
+#endif
+
+int auxiliar;
+#include <cr_section_macros.h>
+
+void setGpio(void);
+
+int main(void) {
+	setGpio();
+
+	while(1){};
+    return 0 ;
+}
+void setGpio(void){
+	LPC_GPIO0->FIODIR &= ~(1);
+	LPC_GPIO2->FIODIR &= ~(1);
+	LPC_GPIOINT->IO0IntEnR |= (1);
+	LPC_PINCON->PINMODE0 |= (2);
+	LPC_PINCON->PINMODE4 |= (2);
+	LPC_GPIO0->FIOSET |= (1);
+	LPC_GPIO2->FIOSET |= (1);
+	LPC_GPIOINT->IO2IntEnR |= (1);
+	NVIC_EnableIRQ(EINT3_IRQn);
+}
+void EINT3_IRQHandler(){
+	if(LPC_GPIOINT->IO0IntStatR & (1)){
+		auxiliar=0b100111;
+	}else{auxiliar=0b111001011010110;
+	}
+	LPC_GPIOINT->IO0IntClr = (1);
+	LPC_GPIOINT->IO2IntClr = (1);
+}
