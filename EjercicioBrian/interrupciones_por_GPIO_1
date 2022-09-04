@@ -1,0 +1,95 @@
+/*
+===============================================================================
+ Name        : Interrupciones_por_GPIO_1.c
+ Author      : $(author)
+ Version     :
+ Copyright   : $(copyright)
+ Description : Realizar un programa que configure el puerto P2.0 y P2.1 para que provoquen una
+ interrupción por flanco de subida para el primer pin y por flanco de bajada para el segundo
+ . Cuando la interrupción sea por P2.0 se enviará por el pin P0.0 la secuencia de bits 010011010.
+  Si la interrupción es por P2.1 se enviará por el pin P0.1 la secuencia 011100110.
+   Las secuencias se envían únicamente cuando se produce una interrupción,
+    en caso contrario la salida de los pines tienen valores 1 lógicos.
+    ¿que prioridad tienen configuradas por defecto estas interrupciones?
+===============================================================================
+*/
+
+#ifdef __USE_CMSIS
+#include "LPC17xx.h"
+#endif
+
+#include <cr_section_macros.h>
+void setGPIO(void);
+void setIntGpio(void);
+void retardo(void);
+uint8_t flagActive=0;
+uint8_t salida1[9]={0,1,0,0,1,1,0,1,0};
+uint8_t cont1=0;
+uint8_t salida2[9]={0,1,1,1,0,0,1,1,0};
+uint8_t cont2=0;
+int main(void) {
+	setGPIO();
+	setIntGpio();
+
+    while(1){
+    	if(flagActive & 1){
+    		if(cont1<=9){
+    			if(salida1[cont1]==0){
+    				LPC_GPIO0->FIOCLR |= 1;
+    			}else{LPC_GPIO0->FIOSET |= 1;}
+    			cont1++;
+    		}
+    		if(cont1>9){
+    			LPC_GPIO0->FIOCLR |= 1;
+    		}
+    	}
+    	if(flagActive & (1<<1)){
+    	    if(cont2<=9){
+    	    	if(salida2[cont2]==0){
+    	    		LPC_GPIO0->FIOCLR |= (1<<1);
+    	    	}else{LPC_GPIO0->FIOSET |= (1<<1);}
+    	    	cont2++;
+    	    }
+    	    if(cont2>9){
+    	    	LPC_GPIO0->FIOCLR |= (1<<1);
+    	    }
+    	}
+    	if((flagActive & (1<<1)) | (flagActive & (1)))
+    	{
+    	retardo();
+    	}
+    }
+    return 0 ;
+}
+
+void setGPIO(void){
+	LPC_PINCON->PINSEL4 &= ~(7);//ACTIVO MODO GPIO PARA P2.0 Y P2.1
+
+	LPC_GPIO2->FIODIR &= ~(3); // P2.0 y P2.1 ENTRADA
+
+	LPC_GPIO0->FIODIR |= (3); //P0.0 Y P0.1 COMO SALIDA
+	LPC_GPIO0->FIOSET |= (3); //PONGO EN ALTO LAS SALIDAS
+
+}
+
+void setIntGpio(void){
+	LPC_GPIOINT->IO2IntEnR |= (1);// P2.0 POR FLANCO ASCENDENTE
+	LPC_GPIOINT->IO2IntEnF |= (1<<1);// P2.1 POR FLANCO DESCENDENTE
+	NVIC_EnableIRQ(EINT3_IRQn);//HABILITAMOS INT POR
+}
+
+void EINT3_IRQHandler(void){
+	if(LPC_GPIOINT->IO2IntStatF & 2){
+		flagActive |= 10;
+		cont1=0;
+	}else{
+		flagActive |= 1;
+		cont2=0;
+	}
+	LPC_GPIOINT->IO2IntClr |= (3);
+}
+
+void retardo(void){
+    uint32_t contador;
+    for(contador =0;contador<6000000;contador++);
+}
