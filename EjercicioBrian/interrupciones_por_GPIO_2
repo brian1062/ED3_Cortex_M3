@@ -30,9 +30,11 @@ int main(void) {
 void setGpio(void){
 	LPC_GPIO0->FIODIR &= ~(1);
 	LPC_GPIO2->FIODIR &= ~(1);
+	//LPC_GPIO0->FIOCLR |= (1);
+	//LPC_GPIO2->FIOCLR |= (1);
 	LPC_GPIOINT->IO0IntEnR |= (1);
-	LPC_PINCON->PINMODE0 |= (2);
-	LPC_PINCON->PINMODE4 |= (2);
+	LPC_PINCON->PINMODE0 |= (0);
+	LPC_PINCON->PINMODE4 |= (0);
 	LPC_GPIO0->FIOSET |= (1);
 	LPC_GPIO2->FIOSET |= (1);
 	LPC_GPIOINT->IO2IntEnR |= (1);
