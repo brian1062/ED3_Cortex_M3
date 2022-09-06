@@ -1,0 +1,66 @@
+/*
+===============================================================================
+ Name        : brayansito.c
+ Author      : $(author)
+ Version     :
+ Copyright   : $(copyright)
+ Description : main definition
+===============================================================================
+*/
+	//int gpio flanco descendente y systick 100mhz
+	//pin del puerto 0, debe esperar 100ms luego debe leer 8 bits
+	//menos significativos debe mostrarse en los 8bits menos sig del puerto 1
+	//el cuadruple del valor obtenido, en caso de no se pueda representar
+	//se debe sacar el valor maximo
+
+#ifdef __USE_CMSIS
+#include "LPC17xx.h"
+#endif
+
+#include <cr_section_macros.h>
+
+void setGpioint(void);
+uint32_t aux=0;
+
+// TODO: insert other definitions and declarations here
+
+int main(void) {
+
+    // TODO: insert code here
+
+   setGpioint();
+
+	return 0 ;
+}
+
+void setGpioint(void){
+	LPC_GPIO0->FIODIR |= 0;//SETEO EL PUERTO 0 COMO ENTRADA
+	LPC_GPIO1->FIODIR &= ~(0x000000FF);//seteo como salidas p1.0 a 8
+	LPC_GPIOINT->IO0IntEnF |= (1<<11); //SETEO COMO POR FLANCO DESCENDENTE
+	LPC_GPIOINT->IO0IntClr |= (1<<11); //LIMPIO LA FLAG
+	NVIC_EnableIRQ(EINT3_IRQn); // activo la interrupciones eint3 para gpio
+
+
+	//seteo el systick pero no lo activo
+	SysTick->CTRL =0;// limpio la flag
+	SysTick->VAL =0;//limpio el val actual del systick
+	SysTick->LOAD = 9999999;//100E6*100E-3-1 //para 100ms
+
+}
+
+void EINT3_IRQHandler(){
+	SysTick->CTRL = 0x07;//activo el systick
+	LPC_GPIOINT->IO0IntClr |= (1<<11); //LIMPIO LA FLAG
+	NVIC_DisableIRQ(EINT3_IRQn); // desactivo la interrupciones eint3 para gpio
+}
+void SysTick_Handler(){
+	aux = (LPC_GPIO0->FIOPIN<<2);//multiplico x4 el puerto 0
+	if(aux & ((1<<10)|(1<<9))){ //compruebo si es mayor a 8bits
+		LPC_GPIO1->FIOPIN0 |= 0xFF;
+	}else{
+		LPC_GPIO1->FIOPIN0 |= (aux & 0xFF);
+	}
+	SysTick->CTRL &= SysTick->CTRL;//limpio la flag del systick
+	SysTick->CTRL &= ~(1);//desactivo el systick
+	NVIC_EnableIRQ(EINT3_IRQn); // activo la int por gpio para volver a tomar otra lectura
+}
