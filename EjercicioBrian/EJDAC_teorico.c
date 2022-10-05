@@ -56,8 +56,8 @@ void setTimer(){//5micros = 200khz
 
 void TIMER0_IRQHandler(){
 	uint32_t dacval;
-	dacval = (LPC_DAC->DACCTRL)&~(1023<<6);
-	LPC_DAC->DACCTRL = dacval|(dacvalue[count]<<6);
+	dacval = (LPC_DAC->DACR)&~(1023<<6);
+	LPC_DAC->DACR = dacval|(dacvalue[count]<<6);
 	if(cont=0){
 		cont++;
 	}else{
