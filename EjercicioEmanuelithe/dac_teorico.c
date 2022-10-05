@@ -25,7 +25,7 @@ void configDac(){
 	LPC_PINCON->PINSEL1 |= (1<<21);//CONF AOUT P0.26
 	LPC_SC->PCLKSEL0 |= (1<<22);//CCLK
 	LPC_PINCON->PINMODE1 |= (1<<21);//OPEN drain mode
-	LPC_DAC->DACCTRL |= (1<<16);//BIAS EN 1
+	LPC_DAC->DACR |= (1<<16);//BIAS EN 1
 
 }
 void setTimer(){//5micros = 200khz
@@ -44,8 +44,8 @@ void setTimer(){//5micros = 200khz
 
 void TIMER0_IRQHandler(){
 	uint32_t dacval;
-	dacval = (LPC_DAC->DACCTRL)&~(1023<<6);
-	LPC_DAC->DACCTRL = dacval|(dacvalue[count]<<6);
+	dacval = (LPC_DAC->DACR)&~(1023<<6);
+	LPC_DAC->DACR = dacval|(dacvalue[count]<<6);
 	if(cont=0){
 		cont++;
 	}else{
