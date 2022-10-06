@@ -27,6 +27,7 @@ int first_capture 	= 0;
 
 
 int main(void) {
+	LPC_PINCON->PINSEL3 |=(0xF<<20);//selecciono mod cap0.0 cap0.1 (pines p1.26/27)
 	config_timer();
 	while(1);
 
