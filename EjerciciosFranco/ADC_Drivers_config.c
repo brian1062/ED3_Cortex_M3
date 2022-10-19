@@ -36,7 +36,7 @@ void config_PIN(){
 	PINSEL_ConfigPin(&pincfg0);
 
 	pincfg1.Portnum = PINSEL_PORT_0;
-	pincfg1.Pinnum  = 24;
+	pincfg1.Pinnum  = 23;
 	pincfg1.Funcnum = 1;
 	pincfg1.Pinmode = PINSEL_PINMODE_TRISTATE;
 	pincfg1.OpenDrain = PINSEL_PINMODE_NORMAL;
@@ -44,7 +44,7 @@ void config_PIN(){
 	PINSEL_ConfigPin(&pincfg1);
 
 	pincfg2.Portnum = PINSEL_PORT_0;
-	pincfg2.Pinnum  = 25;
+	pincfg2.Pinnum  = 23;
 	pincfg2.Funcnum = 1;
 	pincfg2.Pinmode = PINSEL_PINMODE_TRISTATE;
 	pincfg2.OpenDrain = PINSEL_PINMODE_NORMAL;
@@ -52,7 +52,7 @@ void config_PIN(){
 	PINSEL_ConfigPin(&pincfg2);
 
 	pincfg3.Portnum = PINSEL_PORT_0;
-	pincfg3.Pinnum  = 26;
+	pincfg3.Pinnum  = 23;
 	pincfg3.Funcnum = 1;
 	pincfg3.Pinmode = PINSEL_PINMODE_TRISTATE;
 	pincfg3.OpenDrain = PINSEL_PINMODE_NORMAL;
