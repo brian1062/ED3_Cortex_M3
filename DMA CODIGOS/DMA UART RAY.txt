@@ -1,0 +1,100 @@
+
+
+/*
+===============================================================================
+ Name        : DmaMemPer.c
+ Author      : $(author)
+ Version     :
+ Copyright   : $(copyright)
+ Description : main definition
+===============================================================================
+*/
+
+#include "LPC17xx.h"
+#include "lpc17xx_gpdma.h"
+#include "lpc17xx_pinsel.h"
+#include "lpc17xx_uart.h"
+
+
+const uint8_t origen[13] = "Hello Word\n\r";
+uint8_t destino[11];
+// Terminal Counter flag for Channel 0
+volatile uint32_t Channel0_TC;
+// Error Counter flag for Channel 0
+volatile uint32_t Channel0_Err;
+
+void configDMA();
+void configUART();
+void configPines();
+
+int main(void) {
+	configPines();
+	configUART();
+	configDMA();
+
+	Channel0_TC = 0;
+	Channel0_Err = 0;
+	GPDMA_ChannelCmd(0, ENABLE);
+	NVIC_EnableIRQ(DMA_IRQn);
+	while ((Channel0_TC == 0));
+	GPDMA_ChannelCmd(0,DISABLE);
+	//TERMINO -> REVISAR DESTINO
+}
+
+void configPines(){
+	//configuro RX y TX
+	PINSEL_CFG_Type pinStruct;
+	pinStruct.Portnum=0;
+	pinStruct.Pinnum=2;
+	pinStruct.Funcnum=1;
+	PINSEL_ConfigPin(&pinStruct);
+	//pinStruct.Pinnum=3;				NO USO POR AHORA RX
+	//PINSEL_ConfigPin(&pinStruct);
+}
+
+void configUART(){
+	UART_CFG_Type uartStruct;
+	uartStruct.Baud_rate=115200;
+	uartStruct.Parity=UART_PARITY_NONE;
+	uartStruct.Databits=UART_DATABIT_8;
+	uartStruct.Stopbits= UART_STOPBIT_1;
+	UART_Init(LPC_UART0,&uartStruct);
+
+	UART_FIFO_CFG_Type fifoStruct;
+	UART_FIFOConfigStructInit(&fifoStruct);
+	UART_FIFOConfig(LPC_UART0,&fifoStruct);
+
+	UART_TxCmd(LPC_UART0,ENABLE);
+}
+
+void configDMA(){
+
+	NVIC_DisableIRQ(DMA_IRQn);
+
+	GPDMA_Init();			//reinicio todos los canales
+
+	int size= sizeof(origen);
+	GPDMA_Channel_CFG_Type dmaStruct;
+	dmaStruct.ChannelNum=0;
+	dmaStruct.TransferSize=size;
+	//dmaStruct.TransferWidth=GPDMA_WIDTH_WORD; -> SE USA SOLO EN M2M
+	dmaStruct.SrcMemAddr=(uint32_t)origen;
+	//dmaStruct.DstMemAddr=(uint32_t)destino; -> NO SE USA EN M2P
+	dmaStruct.TransferType=GPDMA_TRANSFERTYPE_M2P;
+	dmaStruct.DstConn= GPDMA_CONN_UART0_Tx;
+	GPDMA_Setup(&dmaStruct);
+
+}
+
+void DMA_IRQHandler(){
+	if (GPDMA_IntGetStatus(GPDMA_STAT_INT, 0)){
+		if(GPDMA_IntGetStatus(GPDMA_STAT_INTTC, 0)){
+			GPDMA_ClearIntPending (GPDMA_STATCLR_INTTC, 0);
+			Channel0_TC++;
+		}
+		if (GPDMA_IntGetStatus(GPDMA_STAT_INTERR, 0)){
+			GPDMA_ClearIntPending (GPDMA_STATCLR_INTERR, 0);
+			Channel0_Err++;
+		}
+	}
+}

@@ -1,0 +1,92 @@
+//TIMER_NXP_COMUNITY
+/ *
+================================================== =============================
+ Nombre: FinalProject.c
+ Autores: $ (autor)
+ Versión :
+ Copyright: $ (copyright)
+ Descripción: Timer0 con Match para parpadear un led en PIN0.22
+ 	       El led se encuentra 40ms en alto y 40ms en bajo.
+Cálculo del temporizador:
+CLK = 100MHz => PCLK = CLK / 4 = 25MHz => 1 ciclo = 40ns 
+		1 TC ---> (PR + 1) ciclos = (100 + 1) ciclos = 4.04us
+	    10000 TC ---> 40.4ms 
+Los partidos se producen cada 40.4ms. Y cambian el estado del LED.
+(Ej MatchValue = 250000 y PR = 100 entonces interrumpe cada 1seg)
+================================================== =============================
+* /
+# incluye  " LPC17xx.h "
+# incluye  " lpc17xx_timer.h "
+# incluye  " lpc17xx_gpio.h "
+# define  VERDADERO  1
+# define  FALSO  0
+# define  BAJO 	0
+# define  ALTO  1
+# define  PIN22 ( uint32_t ) ( 1 << 22 )
+# define  PORT0 ( uint8_t ) (( 0 ))
+# define  OUTPUT ( uint8_t ) (( 1 ))
+ configTIMERS nulos ();
+vacío  configGPIO ();
+/ * ************************************************ ********************
+ * @brief
+ * @param [en] Ninguno
+ * @return None
+ * *
+ * Nota:
+************************************************** ******************* * /
+int  main () {
+	configGPIO ();
+	configTIMERS ();
+	mientras que ( VERDADERO ) {
+
+	}
+    volver  FALSO ;}
+/ * ************************************************ ********************
+ * @brief
+ * @param [en] Ninguno
+ * @return None
+ * *
+ * Nota:
+************************************************** ******************* * /
+void  configTIMERS () {
+    TIM_TIMERCFG_Type struct_timer;
+    TIM_MATCHCFG_Type struct_match;
+    struct_timer. PrescaleOption = TIM_PRESCALE_TICKVAL;
+    struct_timer. PrescaleValue = 100 ;
+    struct_match. MatchChannel = 0 ;
+    struct_match. IntOnMatch = ENABLE;
+    struct_match. StopOnMatch = DISABLE; // Que no se detenga luego
+    struct_match. ResetOnMatch = ENABLE;
+    struct_match. ExtMatchOutputType = TIM_EXTMATCH_NOTHING;
+    struct_match. MatchValue = 10000 ;
+    TIM_Init (LPC_TIM0, TIM_TIMER_MODE y struct_timer);
+    TIM_ConfigMatch (LPC_TIM0, & struct_match);
+    TIM_Cmd (LPC_TIM0, ENABLE);
+    NVIC_EnableIRQ (TIMER0_IRQn);
+    volver ;}
+/ * ************************************************ ********************
+ * @brief
+ * @param [en] Ninguno
+ * @return None
+ * *
+ * Nota:
+************************************************** ******************* * /
+vacío  configGPIO () {
+	GPIO_SetDir (PORT0, PIN22, OUTPUT);
+	volver ;}
+/ * ************************************************ ********************
+ * @brief
+ * @param [en] Ninguno
+ * @return None
+ * *
+ * Nota:
+************************************************** ******************* * /
+vacío  TIMER0_IRQHandler ( vacío ) {
+	TIM_ClearIntPending (LPC_TIM0, TIM_MR0_INT);
+	uint32_t tmp_port0 = GPIO_ReadValue (PORT0);
+	if (tmp_port0 y PIN22)
+		GPIO_ClearValue (PORT0, PIN22);
+	más
+		GPIO_SetValue (PORT0, PIN22);
+	volver ;
+}

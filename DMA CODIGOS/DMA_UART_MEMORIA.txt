@@ -1,0 +1,81 @@
+/*//dma uart--memoria
+===============================================================================
+ Name        : DMA_UART_A_MEMORIA.c
+ Author      : $(author)
+ Version     :
+ Copyright   : $(copyright)
+ Description : main definition
+===============================================================================
+*/
+
+#ifdef __USE_CMSIS
+#include "LPC17xx.h"
+#endif
+
+#include <cr_section_macros.h>
+void uartConfiguracion(void);
+
+
+
+int main(void) {
+
+	int i;
+	 uartConfiguracion();
+	 char c[]={"hola mundo \n"  };
+	  for( i=0;i<sizeof(c);i++){
+		  LPC_UART2->THR |=c[i];
+
+	  }
+
+
+
+	//////////CONFIGURACION DEL DMA UART---> MEMORIA ////////////////////////////////////////////////////////
+	 LPC_SC->PCONP|=(1<<29);//ENCIENDO EL DMA
+
+	 LPC_GPDMA->DMACConfig|=(1<<0);//DMA_HABILITADO
+	 LPC_GPDMA->DMACSync&=(1<<4);//ELIJE LA SENIAL DE SOLICITUD AL ADC 4 VER TABLA 544
+	 LPC_GPDMA->DMACIntErrClr|=0xFF;//BAJO BANDERAS SIES QUE HAY UN ERROR EN LA INTERRUPCION
+	 LPC_GPDMA->DMACIntTCClear|=0xFF; //BAJO BANDERAS POR INTERRUPCION DE SOLICITUDES DE DMA
+	 LPC_GPDMACH0->DMACCDestAddr = (uint32_t)0x10004000; //direccion de destino
+
+
+	 LPC_GPDMACH0->DMACCSrcAddr = LPC_UART2->THR|=c[i];
+	 LPC_GPDMACH0->DMACCLLI=0;
+
+	 LPC_GPDMACH0->DMACCControl =12 | ~(1<<18)| ~(1<<21)|(1<<27);//
+	 //100 INDICA LA CANTIDAD DE TRANSFERENCIAS QUE SE DEBEN REALIZAR
+	 	//~(1<<18) ==000 PARA 8 BIT ANCHO DE TRANSFERENCIA DE LA FUENTE
+	 	//DE ESTE MODO TRANSFIERO SOLO 2 BYTES EN CADA UNA DE LAS 100 TRANSFERENCIAS DE LA SORCE FUENTE
+	     //~(1<<21) 000 8BIT PARA EL DESTINO SOURCE == DESTINO
+	 	//(1<<27) LA DIRECCION DE DESTINO SE INCREMENTA LUEGO DE CADA TRANSFERENCIA
+
+	 LPC_GPDMACH0->DMACCConfig=(4<<1)|(1<<12);
+
+	 	//(4<<1) INDICA QUE LA FUENTE ES UN PERIFERICO
+	 	//Y QUE 4 ES EL REQUEST (ADC). (1<<12) YA QUE LA TRANSFERENCIA ES DE PERIFERICO A MEMORIA
+	 	LPC_GPDMACH0->DMACCConfig|=(1<<0);		//ENABLE CANAL CERO DMA
+
+
+
+    while(1) {
+
+
+
+    }
+    return 0 ;
+}
+
+void uartConfiguracion(void){
+	LPC_SC->PCONP|=(1<<24);//ENCIENDE EL UART2
+	LPC_SC->PCLKSEL1&= ~(3<<16);//ENCIENDO EL CLOCK DE PERIFERICO
+	LPC_UART2->LCR |= (3<<0);//LONGITUD DE PALABRA
+	LPC_UART2->LCR |= (1<<7);//ACCESO AL DIVISOR DE LATCHES
+	LPC_UART2->DLL =163;//CONFIGURADO PARA 960 BAUDERATE POR SEGUNDO
+	LPC_UART2->DLM =0;
+	LPC_UART2->LCR &= ~(1<<7);// DEHABILITO ACCESO AL DIVISOR DE LATCHES
+	LPC_PINCON->PINSEL0 |= (5<20); //PINES//Configure P0.10 as Tx and P0.11 as Rx H[40]==P[10] H][41]==P[11]
+	LPC_UART2->IER |= 5;//INTERRUPCION POR RECEPCION Y THX TRANSMISION
+	LPC_UART2->IER |= (1<<2);//Habilita las interrupciones de estado de la línea UARTn RX. El estado de esta interrupción.
+	//POR DEFECTO DE PROGRAMA 1 BIT DE STOP DE PARADA Y EL BIT DE PARIDAD DESHABILITADO
+	NVIC_EnableIRQ(UART2_IRQn);
+}

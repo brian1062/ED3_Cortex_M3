@@ -1,0 +1,122 @@
+//dma_nxp_comunyty
+
+/ *
+================================================== =============================
+ Nombre: dma.c
+ Autor: @justoio
+ Versión :
+ Copyright: $ (copyright)
+ Descripción: Genera una señal escalera en el PIN0.26 usando DMA para mover
+ 				datos desde memoria (un array) a un periférico (DAC).
+================================================== =============================
+* /
+# incluye  " LPC17xx.h "
+# include  " lpc17xx_gpdma.h "
+# incluye  " lpc17xx_dac.h "
+# incluye  " lpc17xx_pinsel.h "
+# define  VERDADERO  1
+# define  FALSO  0
+vacío  configDMA ( uint32_t *);
+vacío  configDAC ();
+vacío  configPIN ();
+nulo  loadTABLA ( uint32_t *);
+/ * ************************************************ ********************
+ * @brief
+ * @param [en] Ninguno
+ * @return None
+ * *
+ * Nota:
+************************************************** ******************* * /
+int  main () {
+	uint32_t TABLA_DAC [ 60 ];
+	loadTABLA (TABLA_DAC);
+	configPIN ();
+	configDAC (); // tmp
+	configDMA (TABLA_DAC);
+	mientras que ( VERDADERO ) {
+
+	}
+volver  FALSO ;}
+/ * ************************************************ ********************
+ * @brief
+ * @param [en] Ninguno
+ * @return None
+ * *
+ * Nota:
+************************************************** ******************* * /
+ configDMA nulo ( uint32_t * tmptestDMA) {
+    GPDMA_LLI_Type struct_lli_dma;
+    GPDMA_Channel_CFG_Type struct_ch_dma;
+    struct_lli_dma. SrcAddr = ( uint32_t ) tmptestDMA; // Suele ser la direccion debe ser la der array
+    struct_lli_dma. DstAddr = ( uint32_t ) & (LPC_DAC-> DACR ); // Suele ser la direccion del registro de algun periferico.
+    struct_lli_dma. NextLLI = ( uint32_t ) & struct_lli_dma; // ?
+    struct_lli_dma. Control = ( 60 ) | ( 2 << 18 ) | ( 2 << 21 ) | ( 1 << 26 ); // Es el registro de Control Tabla 564
+    // ..60 .. Tamaño del tranfer. (64 bytes?)
+    // .. (2 << 18) .. Ancho de fuente de 32 bits.
+    // .. (2 << 21) .. Destino Bruja de 32 bits
+    // .. (1 << 26) .. Para que el source se incremente en 1 despues de cada transferencia
+    GPDMA_Init ();
+    struct_ch_dma. ChannelNum = 0 ; // Selecciono el Channel0
+    struct_ch_dma. SrcMemAddr = ( uint32_t ) (tmptestDMA);
+    struct_ch_dma. DstMemAddr = 0 ; // No se usa porque el destino es periferico
+    struct_ch_dma. TransferSize = 60 ; // ?
+    struct_ch_dma. TransferWidth = 0 ; // No se usa. Es para M2M
+    struct_ch_dma. TransferType = GPDMA_TRANSFERTYPE_M2P; // El tipo de tanseferncia
+    struct_ch_dma. SrcConn = 0 ; // No se usa. Es para P2M P2P
+    struct_ch_dma. DstConn = GPDMA_CONN_DAC; // Destino de Conexión: El DAC
+    struct_ch_dma. DMALLI = ( uint32_t ) & struct_lli_dma;
+    GPDMA_Setup (& struct_ch_dma);
+    GPDMA_ChannelCmd ( 0 , ENABLE); // Activo el Canal 0
+volver ;}
+/ * ************************************************ ********************
+ * @brief
+ * @param [en] Ninguno
+ * @return None
+ * *
+ * Nota:
+************************************************** ******************* * /
+vacío  configDAC () {
+	DAC_CONVERTER_CFG_Type DAC_Struct;
+	DAC_Struct. CNT_ENA = SET;		// Activa el modo timeout
+	DAC_Struct. DMA_ENA = SET;		// Activa el modo
+	DAC_Init (LPC_DAC);
+	DAC_ConfigDAConverterControl (LPC_DAC, & DAC_Struct);
+volver ;}
+/ * ************************************************ ********************
+ * @brief
+ * @param [en] Ninguno
+ * @return None
+ * *
+ * Nota:
+************************************************** ******************* * /
+vacío  configPIN () {
+	PINSEL_CFG_Type pinsel_cfg;
+	pinsel_cfg. Portnum = PINSEL_PORT_0;
+	pinsel_cfg. Pinnum = PINSEL_PIN_26;
+	pinsel_cfg. Funcnum = PINSEL_FUNC_2; // ?
+	pinsel_cfg. Pinmode = PINSEL_PINMODE_PULLUP;
+	pinsel_cfg. OpenDrain = PINSEL_PINMODE_NORMAL;
+	PINSEL_ConfigPin (& pinsel_cfg);
+	volver ;}
+/ * ************************************************ ********************
+ * @brief
+ * @param [en] Ninguno
+ * @return None
+ * *
+ * Nota:
+************************************************** ******************* * /
+nula  cargaTABLA ( uint32_t * TABLA_DAC) {
+	uint32_t i;
+	para (i = 0 ; i < 60 ; i ++) {
+		si (i <= 15 ) {
+			TABLA_DAC [i] = 0 ;
+		} más  si (i <= 30 ) {
+			TABLA_DAC [i] = 500 ;
+		} más  si (i <= 45 ) {
+			TABLA_DAC [i] = 750 ;
+		} más {
+			TABLA_DAC [i] = 1000 ;
+		}
+		TABLA_DAC [i] = (TABLA_DAC [i] << 6 );
+	}
+volver ;}

@@ -1,0 +1,74 @@
+//ADC_NXP_COMUNITY
+# incluye  " LPC17xx.h "
+# incluye  " lpc17xx_timer.h "
+# incluye  " lpc17xx_gpio.h "
+# incluye  " lpc17xx_pinsel.h "
+# incluye  " lpc17xx_adc.h "
+# define  VERDADERO  1
+# define  FALSO  0
+# define  BAJO 	0
+# define  ALTO  1
+# define  PIN22 ( uint32_t ) ( 1 << 22 )
+# define  PORT0 ( uint8_t ) (( 0 ))
+# define  OUTPUT ( uint8_t ) (( 1 ))
+ configTIMERS nulos ();
+vacío  configGPIO ();
+vacío  configPIN ();
+vacío  configADC ();
+/ * ************************************************ ********************
+ * @brief
+ * @param [en] Ninguno
+ * @return None
+ * *
+ * Nota:
+************************************************** ******************* * /
+int  main () {
+	GPIO_SetDir (PORT0, PIN22, OUTPUT);
+	configPIN ();
+	configADC ();
+	mientras que ( VERDADERO ) {
+
+	}
+    volver  FALSO ;}
+/ * ************************************************ ********************
+ * @brief
+ * @param [en] Ninguno
+ * @return None
+ * *
+ * Nota:
+************************************************** ******************* * /
+vacío  configPIN () {
+	PINSEL_CFG_Type PinCfg;
+	PinCfg. Portnum = PINSEL_PORT_0;    / * * <Número de puerto, debe ser PINSEL_PORT_x,
+	                        donde x debe estar en el rango de 0 a 4 * /
+	PinCfg. Pinnum = PINSEL_PIN_23;        / * * <Número de PIN, debe ser PINSEL_PIN_x,
+	                        donde x debe estar en el rango de 0 a 31 * /
+	PinCfg. Funcnum = PINSEL_FUNC_1;    / * * <Número de función, debe ser PINSEL_FUNC_x,
+	                        donde x debe estar en el rango de 0 a 3 * /
+	PinCfg. Pinmode = PINSEL_PINMODE_TRISTATE;   / * * <Modo Pin, debe ser:
+	                        - PINSEL_PINMODE_PULLUP: resistencia interna pull-up
+	                        - PINSEL_PINMODE_TRISTATE: Tri-state
+	                        - PINSEL_PINMODE_PULLDOWN: resistencia interna desplegable * /
+	PinCfg. OpenDrain = PINSEL_PINMODE_NORMAL;    / * * <Modo OpenDrain, debe ser:
+	                        - PINSEL_PINMODE_NORMAL: el pin está en el modo normal (sin drenaje abierto)
+	                        - PINSEL_PINMODE_OPENDRAIN: el pin está en el modo de drenaje abierto * /
+	PINSEL_ConfigPin (& PinCfg);
+	volver ;
+}
+vacío  configADC ( vacío ) {
+	ADC_Init (LPC_ADC, 100000 );
+	ADC_BurstCmd (LPC_ADC, ENABLE);
+	ADC_ChannelCmd (LPC_ADC, 0 , ENABLE);
+	ADC_IntConfig (LPC_ADC, ADC_ADINTEN0, ENABLE);
+	NVIC_EnableIRQ (ADC_IRQn);
+	volver ;
+}
+nulo  ADC_IRQHandler () {
+	uint16_t ADC0Value = 0 ;
+	ADC0Value = ADC_ChannelGetData (LPC_ADC, 0 );
+	si (ADC0Value < 2054 )
+		GPIO_SetValue (PORT0, PIN22);
+	más
+		GPIO_ClearValue (PORT0, PIN22);
+	volver ;
+}
