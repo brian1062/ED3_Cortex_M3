@@ -59,7 +59,9 @@ void config_GPIO(void){
 	push_button.OpenDrain 	= 	PINSEL_PINMODE_NORMAL;
 
 	PINSEL_ConfigPin(&push_button);
-	GPIO_SetDir(PORT_ZERO, PINSEL_PIN_0, INPUT);
+
+
+    GPIO_SetDir(PORT_ZERO, PINSEL_PIN_0, INPUT);
 
 	//Estableceremos al PIN0.0 capaz de interrupir por flanco de bajada.
 	GPIO_IntCmd(PORT_ZERO, PINSEL_PIN_O, 1);
