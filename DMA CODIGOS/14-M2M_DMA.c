@@ -47,9 +47,9 @@ void confDMA(void){
 	// channel 0
 	GPDMACfg.ChannelNum = 0;
 	// Source memory
-	GPDMACfg.SrcMemAddr = (uint32_t)DMASrc_Buffer;
+	GPDMACfg.SrcMemAddr = (uint32_t)DMASrc_Buffer; //no es necesario pasar por referencia porque es un array
 	// Destination memory
-	GPDMACfg.DstMemAddr = (uint32_t)DMADest_Buffer;
+	GPDMACfg.DstMemAddr = (uint32_t)DMADest_Buffer; //no es necesario pasar por referencia porque es un array
 	// Transfer size
 	GPDMACfg.TransferSize = DMA_SIZE;
 	// Transfer width
